@@ -381,10 +381,6 @@ def sisa_time_simulation(dataset = 'MNIST', nt=8, ns=8, num_epochs=120,
         shard_loaders = [DataLoader(shard, batch_size=batch_size, shuffle=False) for shard in student_shards]
 
 
-        # tea_shard_loaders = [DataLoader(subset, batch_size=64, shuffle=True) for subset in teacher_shards]
-        # Loss function and optimizer
-        # criterion = nn.MSELoss()
-        
         mse_loss = nn.MSELoss()
         # number of chunks (nt/ns)
         total_time = 0
@@ -408,16 +404,9 @@ def sisa_time_simulation(dataset = 'MNIST', nt=8, ns=8, num_epochs=120,
                     soft_labels = soft_labels_list[batch_idx]  # Retrieve precomputed soft labels
                     optimizer.zero_grad()
 
-                    # for teacher in teacher_constituents:
-                    #     images = images.to(device)
-                    #     soft_labels += teacher(images)
-                    # soft_labels = soft_labels / len(teacher_constituents)
-
-                    # dummy soft label for time test
                     teacher = teacher_constituents[0]
                     images = images.to(device)
                     outputs = model(images)
-                    # loss = criterion(outputs, soft_labels)
                     loss = mse_loss(outputs, soft_labels)
 
         

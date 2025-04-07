@@ -19,7 +19,7 @@ def time_eval(purge_time=True, sisa_time=True):
 if __name__ == "__main__":    
     if not os.path.isdir('./results/'):
         os.mkdir('./models/')
-    # performance_eval()
+    performance_eval()
 
     if not os.path.isdir('./results_time/'):
         os.mkdir('./results_time/')

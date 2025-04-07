@@ -92,7 +92,6 @@ def train_student_purge(student_constituents, teacher_constituents, nt, ns, trai
             start = start + size
             chunk_set.append(chunk)
         sliced_chunk = chunk_slice(chunk_set, num_slices)
-        # chunk_loaders = [DataLoader(chunk, batch_size=batch_size, shuffle=False) for chunk in chunk_set]
 
         optimizer = optim.Adam(model.parameters(), lr=learning_rate_std)
         for j in range(len(current_teachers)*num_slices):
