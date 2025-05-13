@@ -8,7 +8,8 @@ from utils import *
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Subset
-
+from transformers import logging
+logging.set_verbosity_error()
 
 def teacher_evaluation(dataset = 'MNIST',nt=8, num_epochs=120, 
                 save_root_path="./models/"):
@@ -40,12 +41,20 @@ def teacher_evaluation(dataset = 'MNIST',nt=8, num_epochs=120,
     total = 0
     print("Evaluating Teacher Network")
     with torch.no_grad():
-        for images, labels in test_loader:
-            images, labels = images.to(device), labels.to(device)
-        
+        for batch_idx, data in enumerate(test_loader):  # Use ith shard
+            if dataset == 'sst5':
+                batch = {k: v.to(device) for k, v in data.items()}
+                labels = batch['labels']
+            else:
+                images, labels = data
+                inputs, labels = images.to(device), labels.to(device)
+
             outputs = 0
             for i, model in enumerate(teacher_constituents):
-                outputs += model(images)
+                if dataset == 'sst5':
+                    outputs += model(**batch).logits
+                else:
+                    outputs += model(inputs)
         
             _, predicted = torch.max(outputs, 1)
             total += labels.size(0)
@@ -97,12 +106,20 @@ def purge_evaluation(dataset = 'MNIST',nt=8, ns=2, num_epochs=120,
     total = 0
     print("Evaluating Student Network")
     with torch.no_grad():
-        for images, labels in test_loader:
-            images, labels = images.to(device), labels.to(device)
-        
+        for batch_idx, data in enumerate(test_loader):  # Use ith shard
+            if dataset == 'sst5':
+                batch = {k: v.to(device) for k, v in data.items()}
+                labels = batch['labels']
+            else:
+                images, labels = data
+                inputs, labels = images.to(device), labels.to(device)
+
             outputs = 0
             for i, model in enumerate(student_constituents):
-                outputs += model(images)
+                if dataset == 'sst5':
+                    outputs += model(**batch).logits
+                else:  
+                    outputs += model(inputs)
         
             _, predicted = torch.max(outputs, 1)
             total += labels.size(0)
@@ -114,8 +131,6 @@ def purge_evaluation(dataset = 'MNIST',nt=8, ns=2, num_epochs=120,
         with open(result_path + f'/purge_{nt}_tshards_{ns}_shards_{num_epochs}_epochs_{student_percentage}_percent.pth', "w") as f:
             f.write(f"{accuracy:.2f}%\n")
             print(f"PURGE Result Saved")
-
-
     else:
         with open(result_path + f'/single_{nt}_tshards_{ns}_shards_{num_epochs}_epochs_{student_percentage}_percent.pth', "w") as f:
             f.write(f"{accuracy:.2f}%\n")
@@ -158,13 +173,22 @@ def sisa_evaluation(dataset = 'MNIST',nt=8, ns=2, num_epochs=120,
     total = 0
     print("Evaluating Student Network")
     with torch.no_grad():
-        for images, labels in test_loader:
-            images, labels = images.to(device), labels.to(device)
-        
+        for batch_idx, data in enumerate(test_loader):  # Use ith shard
+            if dataset == 'sst5':
+                batch = {k: v.to(device) for k, v in data.items()}
+                labels = batch['labels']
+            else:
+                images, labels = data
+                inputs, labels = images.to(device), labels.to(device)
+
+    
             outputs = 0
             for i, model in enumerate(student_constituents):
-                outputs += model(images)
-        
+                if dataset == 'sst5':
+                    outputs += model(**batch).logits
+                else:  
+                    outputs += model(inputs)
+                
             _, predicted = torch.max(outputs, 1)
             total += labels.size(0)
             correct += (predicted==labels).sum().item()

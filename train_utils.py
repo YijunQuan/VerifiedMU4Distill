@@ -7,6 +7,8 @@ import numpy as np
 import os
 from tqdm import tqdm
 import pickle
+from transformers import logging
+logging.set_verbosity_error()
 
 def train_teacher(teacher_constituents, trainset, nt, batch_size, num_epochs, learning_rate, device, file_path_teacher,dataset):
     total_size = len(trainset)
