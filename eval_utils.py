@@ -222,7 +222,6 @@ def purge_time_simulation(dataset = 'MNIST', num_rounds = 100, nt=8, ns=2, num_e
 
     # Loss function and optimizer
     mse_loss = nn.MSELoss()
-    # kl_div_loss = nn.KLDivLoss(reduction='batchmean')
 
 
     # number of chunks (nt/ns)
@@ -253,8 +252,6 @@ def purge_time_simulation(dataset = 'MNIST', num_rounds = 100, nt=8, ns=2, num_e
     
         sliced_chunk = chunk_slice(chunk_set, num_slices)
 
-        # chunk_loaders = [DataLoader(chunk, batch_size=batch_size, shuffle=False) for chunk in chunk_set]
-        print(chunk_id)
         model = student_constituents[student_id]
 
         if chunk_id == 0:

@@ -5,7 +5,7 @@ from train_utils import *
 
 
 def purge_train(dataset = 'MNIST',nt =8, ns=2, num_epochs=120, 
-                batch_size=32, learning_rate=0.001, learning_rate_std=5e-3, 
+                batch_size=2, learning_rate=0.001, learning_rate_std=5e-3, 
                 save_root_path="./models/", student_percentage = 10,
                 multi_teacher = True, num_slices=4, device = "cuda"):
 
@@ -46,7 +46,7 @@ def purge_train(dataset = 'MNIST',nt =8, ns=2, num_epochs=120,
 
     # teacher training or loading (For demonstration purpose, teacher is trained with 1 slice per shard)
     if not saved_teacher:
-        train_teacher(teacher_constituents, trainset, nt, batch_size, num_epochs, learning_rate, device, file_path_teacher)
+        train_teacher(teacher_constituents, trainset, nt, batch_size, num_epochs, learning_rate, device, file_path_teacher, dataset=dataset)
     else:
         model_weights = torch.load(file_path_teacher)
         for i, model in enumerate(teacher_constituents):
@@ -62,16 +62,16 @@ def purge_train(dataset = 'MNIST',nt =8, ns=2, num_epochs=120,
     # student constituents trainig or loading
     if not saved_student_purge:
         train_student_purge(student_constituents, teacher_constituents, nt, ns, trainset, student_percentage, num_slices,
-                  learning_rate_std, batch_size, num_epochs, device, multi_teacher, purge_save_path)
+                  learning_rate_std, batch_size, num_epochs, device, multi_teacher, purge_save_path, dataset=dataset)
         
 
     if not saved_student_sisa:
         train_student_sisa(student_constituents, teacher_constituents, nt, ns, trainset, student_percentage,
-                  learning_rate_std, batch_size, num_epochs, device, sisa_save_path)
+                  learning_rate_std, batch_size, num_epochs, device, sisa_save_path, dataset=dataset)
         
 
 if __name__ == "__main__":
     torch.manual_seed(42)
     if not os.path.isdir('./models/'):
         os.mkdir('./models/')
-    purge_train()
+    purge_train(dataset='sst5', num_epochs=1, nt=4, ns=2, student_percentage=10, learning_rate_std=5e-5)

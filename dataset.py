@@ -4,6 +4,9 @@ import torch.nn as nn
 import torchvision.transforms as transforms
 import torchvision.models as models
 from models import *
+from utils import tokenize, tokenizesst5
+from transformers import BertModel, BertTokenizerFast, BertForSequenceClassification
+from datasets import load_dataset
 
 def dataset_init(dataset, device, batch_size=32, nt=32, ns=1, identical=True):
     if identical:
@@ -73,6 +76,21 @@ def dataset_init(dataset, device, batch_size=32, nt=32, ns=1, identical=True):
             # Load test data
             testset = torchvision.datasets.SVHN(root="./dataset/SVHN/", split='test', download=True, transform=transform)
 
+        elif dataset == 'sst5':
+            ds = load_dataset("SetFit/sst5")
+            ds = ds.map(tokenizesst5, batched=True)
+            ds.set_format(type="torch", columns=["input_ids", "attention_mask", "label"])
+            ds = ds.rename_column("label", "labels")
+
+            trainset = ds['train']
+            testset = ds['validation']
+                
+            teacher_constituents = [BertForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=5) for _ in range(nt)]
+            for model in teacher_constituents:
+                model.to(device)
+            student_constituents = [BertForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=5) for _ in range(ns)]
+            for model in student_constituents:
+                model.to(device)
         else:
             raise Exception("Dataset Not Supported")
 
