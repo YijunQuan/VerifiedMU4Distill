@@ -2,7 +2,6 @@
 
 Official Implementation of **PURGE** from:  
 > **"Efficient Verified Machine Unlearning For Distillation"**  
-> Paper Submitted to Neurips 2025
 ---
 ![413260304-d83b26f4-6661-461d-914f-3a98e5124747](https://github.com/user-attachments/assets/6e3e5248-b23f-41bf-ba1e-33b15a9f7462)
 
