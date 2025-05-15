@@ -2,7 +2,7 @@ import os
 import torch
 from dataset import dataset_init
 from train_utils import *
-
+import argparse
 
 def purge_train(dataset = 'MNIST',nt =8, ns=2, num_epochs=120, 
                 batch_size=2, learning_rate=0.001, learning_rate_std=5e-3, 
@@ -71,7 +71,34 @@ def purge_train(dataset = 'MNIST',nt =8, ns=2, num_epochs=120,
         
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Distillation Unlearning Training")
+    parser.add_argument('--dataset', type=str, default='MNIST', help='Dataset to use (default: MNIST)')
+    args = parser.parse_args()
+
+    dataset = args.dataset
+    if dataset == 'MNIST':
+        batch_size = 512
+        learning_rate_std = 5e-3
+        learning_rate = 0.001
+    elif dataset == 'SVHN':
+        batch_size = 512
+        learning_rate_std = 2e-3
+        learning_rate = 2e-3
+    elif dataset == 'sst5':
+        batch_size = 32
+        learning_rate_std = 5e-5
+        learning_rate = 2e-5
+    elif dataset == 'cifar100':
+        batch_size = 32
+        learning_rate_std = 2e-3
+        learning_rate = 2e-3
+    else:
+        raise Exception("Dataset Not Supported")
+
     torch.manual_seed(42)
     if not os.path.isdir('./models/'):
         os.mkdir('./models/')
-    purge_train(dataset='sst5', num_epochs=1, nt=4, ns=2, student_percentage=10, learning_rate_std=5e-5)
+    
+
+    purge_train(dataset=dataset, batch_size=batch_size, num_epochs=1, nt=4, ns=2, student_percentage=10,learning_rate=learning_rate, learning_rate_std=5e-5)
+    
