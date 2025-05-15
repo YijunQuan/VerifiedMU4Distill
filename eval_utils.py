@@ -138,8 +138,7 @@ def purge_evaluation(dataset = 'MNIST',nt=8, ns=2, num_epochs=120,
 
 
 def sisa_evaluation(dataset = 'MNIST',nt=8, ns=2, num_epochs=120, 
-                save_root_path="./models/", student_percentage=10,
-                multi_teacher=True, num_slices = 4):
+                save_root_path="./models/", student_percentage=10):
     
     torch.manual_seed(42)
     result_root_path = "./results/"

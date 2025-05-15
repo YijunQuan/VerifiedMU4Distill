@@ -73,9 +73,20 @@ def purge_train(dataset = 'MNIST',nt =8, ns=2, num_epochs=120,
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Distillation Unlearning Training")
     parser.add_argument('--dataset', type=str, default='MNIST', help='Dataset to use (default: MNIST)')
+    parser.add_argument('--nt', type=int, default=8, help='Number of teacher constituents (default: 8)')
+    parser.add_argument('--ns', type=int, default=2, help='Number of student constituents (default: 2)')
+    parser.add_argument('--num_epochs', type=int, default=120, help='Number of epochs (default: 120)')
+    parser.add_argument('--num_slices', type=int, default=4, help='Number of slices (default: 4)')
+    parser.add_argument('--percent', type=int, default=100, help='Percentage of data to use for student training (default: 100)')
     args = parser.parse_args()
 
     dataset = args.dataset
+    nt = args.nt
+    ns = args.ns
+    num_epochs = args.num_epochs
+    num_slices = args.num_slices
+    percent = args.percent
+
     if dataset == 'MNIST':
         batch_size = 512
         learning_rate_std = 5e-3
@@ -100,5 +111,5 @@ if __name__ == "__main__":
         os.mkdir('./models/')
     
 
-    purge_train(dataset=dataset, batch_size=batch_size, num_epochs=1, nt=4, ns=2, student_percentage=10,learning_rate=learning_rate, learning_rate_std=5e-5)
+    purge_train(dataset=dataset, batch_size=batch_size, num_epochs=num_epochs, nt=nt, ns=ns, student_percentage=percent,learning_rate=learning_rate, learning_rate_std=learning_rate_std)
     
