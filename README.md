@@ -5,13 +5,7 @@ Implementation of **PURGE** from:
 ---
 ![413260304-d83b26f4-6661-461d-914f-3a98e5124747](https://github.com/user-attachments/assets/6e3e5248-b23f-41bf-ba1e-33b15a9f7462)
 
-## 📋 Installation
 
-```bash
-git clone https://github.com/your_username/PURGE.git
-cd PURGE
-pip install -r requirements.txt
-```
 ## Use
 Training (Example: Using MNIST with 8 teacher constituents and 4 student constituents on a 10% subset of the training set for 120 epochs)
 ```bash
