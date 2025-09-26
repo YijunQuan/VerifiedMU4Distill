@@ -62,10 +62,10 @@ We show the plots for both the unlearning speed (Speed-up against baseline SISA)
 If you find this work useful, please cite our paper:
 
 ```bibtex
-@inproceedings{quan2025purge,
+@article{quan2025efficient,
   title={Efficient Verified Machine Unlearning For Distillation},
   author={Quan, Yijun and Li, Zushu and Montana, Giovanni},
-  booktitle={Advances in Neural Information Processing Systems},
+  journal={arXiv preprint arXiv:2503.22539},
   year={2025}
 }
 ```
