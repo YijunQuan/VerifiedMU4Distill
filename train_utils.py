@@ -8,7 +8,9 @@ import os
 from tqdm import tqdm
 import pickle
 from transformers import logging
+import json
 logging.set_verbosity_error()
+
 
 def train_teacher(teacher_constituents, trainset, nt, batch_size, num_epochs, learning_rate, device, file_path_teacher,dataset):
     total_size = len(trainset)
@@ -123,9 +125,11 @@ def train_student_purge(student_constituents, teacher_constituents, nt, ns, trai
                     for teacher in current_teachers[:j+1]:
                         teacher.to(device)
                         if dataset == 'sst5':
-                            soft_labels += teacher(**batch).logits
+                            teacher_output = teacher(**batch).logits
+                            soft_labels += torch.nn.functional.softmax(teacher_output, dim=-1)
                         else:
-                            soft_labels += teacher(inputs)
+                            teacher_output = teacher(inputs)
+                            soft_labels += torch.nn.functional.softmax(teacher_output, dim=-1)
                     soft_labels_list.append(soft_labels / float(j+1))
                 soft_labels_chunk[j] = soft_labels_list
 
@@ -133,10 +137,11 @@ def train_student_purge(student_constituents, teacher_constituents, nt, ns, trai
         if multi_teacher:
             soft_labels_slice = chunk_slice_label(soft_labels_chunk, num_slices)
         for j in range(len(current_teachers)*num_slices):
-            for k in range((j+1)):
-                chunk_id = k // num_slices
-                slice_id = k % num_slices
-                for epoch in range(num_epochs_students):
+            for epoch in range(num_epochs_students):
+                for k in range((j+1)):
+
+                    chunk_id = k // num_slices
+                    slice_id = k % num_slices
                     slice = sliced_chunk[chunk_id][slice_id]
                     if multi_teacher:
                         slice_labels = soft_labels_slice[chunk_id][slice_id]
@@ -155,24 +160,42 @@ def train_student_purge(student_constituents, teacher_constituents, nt, ns, trai
                             outputs = model(**batch).logits
                         else:
                             outputs = model(inputs)
-                            
+                        outputs = torch.nn.functional.softmax(outputs, dim=-1)
+
                         if multi_teacher:
-                            soft_labels = slice_labels[batch_idx]
+                            # soft_labels = slice_labels[batch_idx]
+                            soft_labels = 0
+                            for teacher in current_teachers[:chunk_id+1]:
+                                teacher.to(device)
+                                if dataset == 'sst5':
+                                    teacher_output = teacher(**batch).logits
+                                else:
+                                    teacher_output = teacher(inputs)
+                                soft_labels += teacher_output
+
+                            soft_labels = torch.nn.functional.softmax(soft_labels, dim=-1)
+
                         else:
-                            teacher = current_teachers[k]
+                            teacher = current_teachers[chunk_id]
+                            teacher.to(device)  # Ensure teacher is on device
                             if dataset == 'sst5':
                                 soft_labels = teacher(**batch).logits
+                                soft_labels = torch.nn.functional.softmax(soft_labels, dim=-1)
                             else:
-                                soft_labels = teacher(images)
+                                soft_labels = teacher(inputs)  # Use inputs, not images
+                                soft_labels = torch.nn.functional.softmax(soft_labels, dim=-1)
 
-                        loss = mse_loss(outputs, soft_labels)
+                        # loss = mse_loss(outputs, soft_labels)
+                        loss = kl_div_loss(torch.log(outputs + 1e-8), soft_labels)
                         loss.backward()
                         optimizer.step()
 
                         running_loss += loss.item()
                     print(f"Model {i+1} - Epoch [{epoch+1}/{num_epochs_students}]-Chunk [{chunk_id+1}]-Div[{slice_id+1}], Loss: {running_loss / len(slice_loader):.4f}")
-
-            torch.save(model.state_dict(), purge_save_path + f"/purge_{nt}_tshards_{ns}_shards_{num_epochs}_epochs_{student_percentage}_percent_model{i}_chunk{chunk_id}_slice{slice_id}.pth")
+            if multi_teacher:
+                torch.save(model.state_dict(), purge_save_path + f"/purge2_{nt}_tshards_{ns}_shards_{num_epochs}_epochs_{student_percentage}_percent_model{i}_chunk{chunk_id}_slice{slice_id}.pth")
+            else:
+                torch.save(model.state_dict(), purge_save_path + f"/single_{nt}_tshards_{ns}_shards_{num_epochs}_epochs_{student_percentage}_percent_model{i}_chunk{chunk_id}_slice{slice_id}.pth")
             print(f"Finished Chunk {chunk_id+1} Slice {slice_id+1}\n")
 
         print(f"Finished Training Student Model {i+1}\n")
@@ -183,6 +206,7 @@ def train_student_purge(student_constituents, teacher_constituents, nt, ns, trai
         torch.save(model_weights, purge_save_path + f"/purge_{nt}_tshards_{ns}_shards_{num_epochs}_epochs_{student_percentage}_percent_{num_slices}_slices.pth")
     else:
         torch.save(model_weights, purge_save_path + f"/singe_{nt}_tshards_{ns}_shards_{num_epochs}_epochs_{student_percentage}_percent_{num_slices}_slices.pth")
+    print(f"All PURGE student constituents trained and saved successfully!")
 
 
 
@@ -293,7 +317,7 @@ def train_student_sisa(student_constituents, teacher_constituents, nt, ns, train
                 loss.backward()
                 optimizer.step()
                 running_loss += loss.item()
-            print(f"Model {i+1} - Epoch [{epoch+1}/{num_epochs}]], Loss: {running_loss / len(shard_loader):.4f}")
+            print(f"Model {i+1} - Epoch [{epoch+1}/{num_epochs}], Loss: {running_loss / len(shard_loader):.4f}")
 
         print(f"Finished Training Student Model {i+1}\n")
 

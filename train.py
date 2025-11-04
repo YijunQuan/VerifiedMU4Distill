@@ -59,8 +59,13 @@ def purge_train(dataset = 'MNIST',nt =8, ns=2, num_epochs=120,
     print("All teacher weights being fixed")
     
 
-    # student constituents trainig or loading
+    # student constituents trainig or loading, testing both multi-teacher and single-teacher PURGE
     if not saved_student_purge:
+        multi_teacher = True
+        train_student_purge(student_constituents, teacher_constituents, nt, ns, trainset, student_percentage, num_slices,
+                  learning_rate_std, batch_size, num_epochs, device, multi_teacher, purge_save_path, dataset=dataset)
+
+        multi_teacher = False        
         train_student_purge(student_constituents, teacher_constituents, nt, ns, trainset, student_percentage, num_slices,
                   learning_rate_std, batch_size, num_epochs, device, multi_teacher, purge_save_path, dataset=dataset)
         
@@ -78,6 +83,7 @@ if __name__ == "__main__":
     parser.add_argument('--num_epochs', type=int, default=120, help='Number of epochs (default: 120)')
     parser.add_argument('--num_slices', type=int, default=4, help='Number of slices (default: 4)')
     parser.add_argument('--percent', type=int, default=100, help='Percentage of data to use for student training (default: 100)')
+    parser.add_argument('--multi_teacher', action='store_true', help='Use multi-teacher PURGE (default: single-teacher)')
     args = parser.parse_args()
 
     dataset = args.dataset
@@ -86,10 +92,11 @@ if __name__ == "__main__":
     num_epochs = args.num_epochs
     num_slices = args.num_slices
     percent = args.percent
+    multi_teacher = args.multi_teacher
 
     if dataset == 'MNIST':
         batch_size = 512
-        learning_rate_std = 5e-3
+        learning_rate_std = 1e-4
         learning_rate = 0.001
     elif dataset == 'SVHN':
         batch_size = 512
@@ -101,8 +108,8 @@ if __name__ == "__main__":
         learning_rate = 2e-5
     elif dataset == 'cifar100':
         batch_size = 32
-        learning_rate_std = 2e-3
-        learning_rate = 2e-3
+        learning_rate_std = 2e-5
+        learning_rate = 2e-5
     else:
         raise Exception("Dataset Not Supported")
 
@@ -111,5 +118,5 @@ if __name__ == "__main__":
         os.mkdir('./models/')
     
 
-    purge_train(dataset=dataset, batch_size=batch_size, num_epochs=num_epochs, nt=nt, ns=ns, student_percentage=percent,learning_rate=learning_rate, learning_rate_std=learning_rate_std)
+    purge_train(dataset=dataset, batch_size=batch_size, num_epochs=num_epochs, nt=nt, ns=ns, student_percentage=percent,learning_rate=learning_rate, learning_rate_std=learning_rate_std, multi_teacher=multi_teacher, num_slices=num_slices)
     
